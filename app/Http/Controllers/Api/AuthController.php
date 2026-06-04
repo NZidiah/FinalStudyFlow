@@ -10,10 +10,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Events\Verified;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Config;
-use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\Password;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -157,28 +154,15 @@ public function forgotPassword(Request $request)
         'email' => ['required', 'email'],
     ]);
 
-    $user = User::where('email', $request->email)->first();
-    if (!$user) {
-        return response()->json(['message' => 'Email not found'], 404);
-    }
-
-    $token = Str::random(60);
-
-    DB::table('password_resets')->updateOrInsert(
-        ['email' => $user->email],
-        [
-            'email' => $user->email,
-            'token' => Hash::make($token),
-            'created_at' => now(),
-        ]
+    $status = Password::sendResetLink(
+        $request->only('email')
     );
 
-    // بدلاً من إرسال إيميل، نرجع token في JSON
-    return response()->json([
-        'message' => 'Reset token generated',
-        'token' => $token,
-        'email' => $user->email
-    ]);
+    if ($status === Password::ResetLinkSent) {
+        return response()->json(['message' => 'Reset link sent to your email.']);
+    }
+
+    return response()->json(['message' => __($status)], 422);
 }
 
     public function resetPassword(Request $request)
