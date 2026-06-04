@@ -19,10 +19,15 @@ return [
 
     'allowed_methods' => ['*'],
 
-    // 'allowed_origins' => ['http://localhost:3000'],
-    'allowed_origins' => ['*'],
+    'allowed_origins' => [
+        'http://localhost:3000',
+        'https://am.top-tech.dev',
+        'https://studyflow-front.vercel.app',
+    ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '#^https://.*\.vercel\.app$#',
+    ],
 
     'allowed_headers' => ['*'],
 
