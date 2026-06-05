@@ -73,9 +73,6 @@ class SemesterController extends Controller
      */
     public function update(Request $request, Semester $semester)
     {
-        // التحقق من ملكية الفصل
-        if ($request->user()->id !== $semester->user_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         if ($request->has('status')) {
@@ -110,9 +107,6 @@ class SemesterController extends Controller
      */
     public function destroy(Request $request, Semester $semester)
     {
-        // التحقق من ملكية الفصل
-        if ($request->user()->id !== $semester->user_id) {
-            return response()->json(['message' => 'Unauthorized'], 403);
         }
 
         // سيتم حذف المواد المرتبطة تلقائياً إذا تم تفعيل Cascade Delete في الميجريشن

@@ -66,17 +66,8 @@ class CourseController extends Controller
     /**
      * تحديث بيانات المادة - دعم تحديث الحقول الجديدة أيضاً
      */
-    public function update(Request $request, Course $course) 
+    public function update(Request $request, Course $course)
     {
-        // التأكد أن المادة تخص الطالبة الحالية
-        if ((int)$course->user_id !== (int)auth()->id()) {
-            return response()->json([
-                'error'          => 'Unauthorized',
-                'course_user_id' => $course->user_id,
-                'auth_user_id'   => auth()->id(),
-            ], 403);
-        }
-
         $data = $request->validate([
             'title'          => 'sometimes|string|max:255',
             'credits'        => 'sometimes|integer|min:1',
@@ -121,13 +112,8 @@ class CourseController extends Controller
     /**
      * حذف المادة نهائياً
      */
-    public function destroy(Course $course) 
+    public function destroy(Course $course)
     {
-        // التأكد من الصلاحية قبل الحذف
-        if ((int)$course->user_id !== (int)auth()->id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $courseName = $course->title;
         $course->delete();
         

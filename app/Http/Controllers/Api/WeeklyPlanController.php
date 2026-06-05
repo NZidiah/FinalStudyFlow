@@ -21,10 +21,6 @@ class WeeklyPlanController extends Controller
             return response()->json(['error' => 'Weekly plan not found in database', 'id' => $id], 404);
         }
 
-        if (!$weeklyPlan->course || (int)$weeklyPlan->course->user_id !== (int)auth()->id()) {
-            return response()->json(['error' => 'Unauthorized Access to this course'], 403);
-        }
-
         $request->validate([
             'completed' => 'required|boolean',
         ]);
