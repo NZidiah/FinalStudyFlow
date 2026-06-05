@@ -14,6 +14,21 @@ use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\WeeklyPlanController;
 use App\Http\Controllers\Api\NotificationController;
 
+// --- Diagnostic endpoint (temporary) ---
+Route::get('/health', function () {
+    $tables = ['users','courses','tasks','focus_sessions','reflections','learning_plans','semesters','notifications'];
+    $status = [];
+    foreach ($tables as $table) {
+        try {
+            $count = \Illuminate\Support\Facades\DB::table($table)->count();
+            $status[$table] = ['exists' => true, 'rows' => $count];
+        } catch (\Exception $e) {
+            $status[$table] = ['exists' => false, 'error' => $e->getMessage()];
+        }
+    }
+    return response()->json(['db' => $status, 'auth_user' => auth()->id()]);
+});
+
 // --- المسارات العامة (بدون تسجيل دخول) ---
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
