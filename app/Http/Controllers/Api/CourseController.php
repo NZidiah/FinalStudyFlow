@@ -84,6 +84,8 @@ class CourseController extends Controller
             'description'    => 'nullable|string',
             'image_url'      => 'nullable|string',
             'numeric_grade'  => 'nullable|numeric|min:0|max:100',
+            'weekly_plan'    => 'nullable|array',
+            'resources'      => 'nullable|array',
         ]);
 
         $course->update($data);

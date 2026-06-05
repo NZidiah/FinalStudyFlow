@@ -13,20 +13,24 @@ class Course extends Model
         'user_id',
         'semester_id',
         'title',
-        'code',           // جديد: كود المادة
-        'instructor',     // جديد: اسم المدرس
+        'code',
+        'instructor',
         'credits',
-        'duration_weeks', // جديد: مدة الأسابيع
-        'description',    // جديد: الوصف والملاحظات
-        'image_url',      // جديد: رابط الصورة
+        'duration_weeks',
+        'description',
+        'image_url',
         'numeric_grade',
-        'status',         // planned / current / completed
+        'status',
+        'weekly_plan',
+        'resources',
     ];
 
     protected $casts = [
-        'credits' => 'integer',
-        'duration_weeks' => 'integer', // جديد: تحويل المدة لرقم
+        'credits'       => 'integer',
+        'duration_weeks'=> 'integer',
         'numeric_grade' => 'float',
+        'weekly_plan'   => 'array',
+        'resources'     => 'array',
     ];
 
     // العلاقة مع User
