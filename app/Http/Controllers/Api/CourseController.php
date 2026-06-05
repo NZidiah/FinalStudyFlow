@@ -69,8 +69,12 @@ class CourseController extends Controller
     public function update(Request $request, Course $course) 
     {
         // التأكد أن المادة تخص الطالبة الحالية
-        if ($course->user_id !== auth()->id()) {
-            return response()->json(['error' => 'Unauthorized'], 403);
+        if ((int)$course->user_id !== (int)auth()->id()) {
+            return response()->json([
+                'error'          => 'Unauthorized',
+                'course_user_id' => $course->user_id,
+                'auth_user_id'   => auth()->id(),
+            ], 403);
         }
 
         $data = $request->validate([
@@ -120,7 +124,7 @@ class CourseController extends Controller
     public function destroy(Course $course) 
     {
         // التأكد من الصلاحية قبل الحذف
-        if ($course->user_id !== auth()->id()) {
+        if ((int)$course->user_id !== (int)auth()->id()) {
             return response()->json(['error' => 'Unauthorized'], 403);
         }
 
