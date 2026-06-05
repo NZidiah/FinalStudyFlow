@@ -14,7 +14,7 @@ class CourseController extends Controller
      */
     public function index(Request $request) 
     {
-        return $request->user()->courses()->with('semester')->get();
+        return $request->user()->courses()->with(['semester', 'resources'])->get();
     }
 
     /**
@@ -68,6 +68,8 @@ class CourseController extends Controller
      */
     public function update(Request $request, Course $course)
     {
+        $incomingResources = $request->input('resources');
+
         $data = $request->validate([
             'title'          => 'sometimes|string|max:255',
             'credits'        => 'sometimes|integer|min:1',
@@ -80,7 +82,6 @@ class CourseController extends Controller
             'image_url'      => 'nullable|string',
             'numeric_grade'  => 'nullable|numeric|min:0|max:100',
             'weekly_plan'    => 'nullable|array',
-            'resources'      => 'nullable|array',
         ]);
 
         // Don't overwrite semester_id if not explicitly sent or sent as null with existing value
@@ -89,6 +90,21 @@ class CourseController extends Controller
         }
 
         $course->update($data);
+
+        // Sync resources to the resources table
+        if (!\is_null($incomingResources) && \is_array($incomingResources)) {
+            $course->resources()->delete();
+            foreach ($incomingResources as $r) {
+                if (!empty($r['title']) && !empty($r['url'])) {
+                    $course->resources()->create([
+                        'title'       => $r['title'],
+                        'type'        => $r['type'] ?? 'link',
+                        'url'         => $r['url'],
+                        'description' => $r['description'] ?? null,
+                    ]);
+                }
+            }
+        }
 
         // Only notify on actual metadata changes (not on weekly_plan/resources-only updates)
         $metaFields = ['title','credits','status','code','instructor','duration_weeks','description','image_url','numeric_grade'];
@@ -105,7 +121,7 @@ class CourseController extends Controller
 
         return response()->json([
             'message' => 'Course updated successfully',
-            'course'  => $course->fresh(),
+            'course'  => $course->fresh()->load('resources'),
         ]);
     }
 
@@ -153,7 +169,7 @@ class CourseController extends Controller
         }
 
         try {
-            $course->load(['weeklyPlans', 'tasks']); 
+            $course->load(['weeklyPlans', 'tasks', 'resources']);
             return response()->json(['status' => 'success', 'course' => $course]);
         } catch (\Exception $e) {
             return response()->json(['error' => $e->getMessage()], 500);

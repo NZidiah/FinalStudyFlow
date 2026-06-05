@@ -28,6 +28,8 @@ class LearningController extends Controller
      */
     public function store(Request $request)
     {
+        $incomingResources = $request->input('resources');
+
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'goal' => 'required|string',
@@ -41,12 +43,24 @@ class LearningController extends Controller
             'milestones' => 'nullable|array',
         ]);
 
-        // إضافة id المستخدم للبيانات قبل الحفظ
         $plan = LearningPlan::create(array_merge($validated, [
             'user_id' => Auth::id()
         ]));
 
-        // إضافة إشعار
+        // Sync resources to resources table
+        if (!\is_null($incomingResources) && \is_array($incomingResources)) {
+            foreach ($incomingResources as $r) {
+                if (!empty($r['title']) && !empty($r['url'])) {
+                    $plan->resources()->create([
+                        'title'       => $r['title'],
+                        'type'        => $r['type'] ?? 'link',
+                        'url'         => $r['url'],
+                        'description' => $r['description'] ?? null,
+                    ]);
+                }
+            }
+        }
+
         Notification::create([
             'user_id' => Auth::id(),
             'title' => 'Learning Plan Created',
@@ -57,7 +71,7 @@ class LearningController extends Controller
 
         return response()->json([
             'message' => 'Success! Your learning plan has been created.',
-            'plan' => $plan
+            'plan' => $plan->load('resources')
         ], 201);
     }
 
@@ -77,6 +91,8 @@ class LearningController extends Controller
     {
         $plan = LearningPlan::where('user_id', Auth::id())->findOrFail($id);
 
+        $incomingResources = $request->input('resources');
+
         $validated = $request->validate([
             'title' => 'sometimes|required|string|max:255',
             'goal' => 'sometimes|required|string',
@@ -92,11 +108,25 @@ class LearningController extends Controller
 
         $plan->update($validated);
 
-        // Notify only if the plan status has just changed to 'completed'
+        // Sync resources to resources table
+        if (!\is_null($incomingResources) && \is_array($incomingResources)) {
+            $plan->resources()->delete();
+            foreach ($incomingResources as $r) {
+                if (!empty($r['title']) && !empty($r['url'])) {
+                    $plan->resources()->create([
+                        'title'       => $r['title'],
+                        'type'        => $r['type'] ?? 'link',
+                        'url'         => $r['url'],
+                        'description' => $r['description'] ?? null,
+                    ]);
+                }
+            }
+        }
+
         if ($request->status === 'completed' && $plan->status === 'completed') {
             Notification::create([
                 'user_id' => Auth::id(),
-                'title' => 'Learning Goal Achieved! 🏆',
+                'title' => 'Learning Goal Achieved!',
                 'message' => "Congratulations! You've officially completed: {$plan->title}",
                 'type' => 'success',
                 'target_route' => '/self-learning'
@@ -105,7 +135,7 @@ class LearningController extends Controller
 
         return response()->json([
             'message' => 'Plan updated successfully',
-            'plan' => $plan
+            'plan' => $plan->fresh()->load('resources')
         ]);
     }
 
@@ -115,7 +145,6 @@ class LearningController extends Controller
     public function destroy($id)
     {
         $plan = LearningPlan::where('user_id', Auth::id())->findOrFail($id);
-        $planTitle = $plan->title;
         $plan->delete();
 
         // Removed delete notification to reduce noise
