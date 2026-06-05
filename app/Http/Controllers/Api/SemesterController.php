@@ -73,8 +73,6 @@ class SemesterController extends Controller
      */
     public function update(Request $request, Semester $semester)
     {
-        }
-
         if ($request->has('status')) {
             $request->merge([
                 'status' => strtolower($request->status)
@@ -107,8 +105,6 @@ class SemesterController extends Controller
      */
     public function destroy(Request $request, Semester $semester)
     {
-        }
-
         // سيتم حذف المواد المرتبطة تلقائياً إذا تم تفعيل Cascade Delete في الميجريشن
         $semesterName = $semester->name;
         $semester->delete();
