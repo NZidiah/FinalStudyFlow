@@ -14,7 +14,7 @@ use App\Http\Controllers\Api\ReflectionController;
 use App\Http\Controllers\Api\WeeklyPlanController;
 use App\Http\Controllers\Api\NotificationController;
 
-// --- Diagnostic endpoint (temporary) ---
+// --- Diagnostic endpoints (temporary) ---
 Route::get('/health', function () {
     $tables = ['users','courses','tasks','focus_sessions','reflections','learning_plans','semesters','notifications'];
     $status = [];
@@ -27,6 +27,31 @@ Route::get('/health', function () {
         }
     }
     return response()->json(['db' => $status, 'auth_user' => auth()->id()]);
+});
+
+// Test authenticated save (requires Bearer token)
+Route::middleware('auth:sanctum')->post('/debug-save', function (\Illuminate\Http\Request $request) {
+    try {
+        $focus = \App\Models\FocusSession::create([
+            'user_id' => auth()->id(),
+            'minutes' => 1,
+            'type'    => 'test',
+        ]);
+        $task = \App\Models\Task::create([
+            'user_id' => auth()->id(),
+            'title'   => '__debug_test__',
+            'type'    => 'general',
+            'priority'=> 'low',
+            'status'  => 'pending',
+        ]);
+        return response()->json([
+            'auth_user_id'    => auth()->id(),
+            'focus_saved_id'  => $focus->id,
+            'task_saved_id'   => $task->id,
+        ]);
+    } catch (\Exception $e) {
+        return response()->json(['error' => $e->getMessage()], 500);
+    }
 });
 
 // --- المسارات العامة (بدون تسجيل دخول) ---
