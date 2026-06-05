@@ -88,20 +88,29 @@ class CourseController extends Controller
             'resources'      => 'nullable|array',
         ]);
 
+        // Don't overwrite semester_id if not explicitly sent or sent as null with existing value
+        if (array_key_exists('semester_id', $data) && is_null($data['semester_id']) && !is_null($course->semester_id)) {
+            unset($data['semester_id']);
+        }
+
         $course->update($data);
 
-        // إضافة إشعار للتعديل
-        Notification::create([
-            'user_id' => auth()->id(),
-            'title' => 'Course Updated',
-            'message' => "The details for {$course->title} have been updated.",
-            'type' => 'info',
-            'target_route' => "/courses/{$course->id}"
-        ]);
-        
+        // Only notify on actual metadata changes (not on weekly_plan/resources-only updates)
+        $metaFields = ['title','credits','status','code','instructor','duration_weeks','description','image_url','numeric_grade'];
+        $hasMetaChange = count(array_intersect_key($data, array_flip($metaFields))) > 0;
+        if ($hasMetaChange) {
+            Notification::create([
+                'user_id' => auth()->id(),
+                'title' => 'Course Updated',
+                'message' => "Details for {$course->title} have been updated.",
+                'type' => 'info',
+                'target_route' => "/courses/{$course->id}"
+            ]);
+        }
+
         return response()->json([
             'message' => 'Course updated successfully',
-            'course'  => $course
+            'course'  => $course->fresh(),
         ]);
     }
 
