@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Assignment;
 use App\Models\Course;
 use App\Models\Notification;
+use App\Models\StudyTask;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -102,6 +104,47 @@ class CourseController extends Controller
                         'url'         => $r['url'],
                         'description' => $r['description'] ?? null,
                     ]);
+                }
+            }
+        }
+
+        // Sync weekly_plans table + study_tasks + assignments from weekly_plan JSON
+        if (isset($data['weekly_plan']) && \is_array($data['weekly_plan'])) {
+            foreach ($data['weekly_plan'] as $weekData) {
+                $weekNumber = $weekData['weekNumber'] ?? null;
+                if (!\is_int($weekNumber) && !\is_string($weekNumber)) continue;
+
+                $weeklyPlan = $course->weeklyPlans()->firstOrCreate(
+                    ['week_number' => (int) $weekNumber],
+                    ['title' => $weekData['title'] ?? "Week {$weekNumber} Content", 'completed' => false]
+                );
+                $weeklyPlan->update(['completed' => (bool) ($weekData['completed'] ?? false)]);
+
+                // Sync study_tasks
+                if (isset($weekData['studyTasks']) && \is_array($weekData['studyTasks'])) {
+                    $weeklyPlan->studyTasks()->delete();
+                    foreach ($weekData['studyTasks'] as $st) {
+                        if (!empty($st['title'])) {
+                            $weeklyPlan->studyTasks()->create([
+                                'title'     => $st['title'],
+                                'completed' => (bool) ($st['completed'] ?? false),
+                            ]);
+                        }
+                    }
+                }
+
+                // Sync assignments
+                if (isset($weekData['assignments']) && \is_array($weekData['assignments'])) {
+                    $weeklyPlan->assignments()->delete();
+                    foreach ($weekData['assignments'] as $a) {
+                        if (!empty($a['title'])) {
+                            $weeklyPlan->assignments()->create([
+                                'title'    => $a['title'],
+                                'due_date' => $a['dueDate'] ?? null,
+                                'status'   => $a['status'] ?? 'pending',
+                            ]);
+                        }
+                    }
                 }
             }
         }
