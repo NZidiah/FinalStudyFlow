@@ -10,12 +10,14 @@ use Illuminate\Http\Request;
 class ExamTopicController extends Controller
 {
     // جلب كل المواضيع الخاصة بامتحان معين ضمن كورس معين
-    public function index($courseId, $taskId) {
+    public function index($courseId, $taskId)
+    {
         return ExamTopic::where('task_id', $taskId)->get();
     }
 
     // إضافة موضوع جديد لامتحان معين
-    public function store(Request $request, $courseId, $taskId) {
+    public function store(Request $request, $courseId, $taskId)
+    {
         $validated = $request->validate([
             'title'   => 'required|string',
         ]);
@@ -38,7 +40,8 @@ class ExamTopicController extends Controller
     }
 
     // تبديل حالة الانتهاء (صح أو خطأ)
-    public function toggle($id) {
+    public function toggle($id)
+    {
         $topic = ExamTopic::findOrFail($id);
         $topic->completed = !$topic->completed;
         $topic->save();
@@ -56,7 +59,8 @@ class ExamTopicController extends Controller
     }
 
     // تحديث عنوان الموضوع
-    public function update(Request $request, $id) {
+    public function update(Request $request, $id)
+    {
         $validated = $request->validate([
             'title' => 'required|string',
         ]);
@@ -67,7 +71,8 @@ class ExamTopicController extends Controller
     }
 
     // حذف موضوع
-    public function destroy($id) {
+    public function destroy($id)
+    {
         ExamTopic::findOrFail($id)->delete();
         return response()->json(['message' => 'Deleted successfully']);
     }

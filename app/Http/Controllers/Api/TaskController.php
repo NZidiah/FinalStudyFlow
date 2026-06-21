@@ -136,7 +136,7 @@ public function store(Request $request)
             'description' => 'nullable|string',
             'course_id'   => 'nullable|exists:courses,id',
             'week_number' => 'nullable|integer',
-            'dueDate'     => 'nullable',
+            'dueDate'     => 'required|date',
             'dueTime'     => 'nullable',
             'is_recurring'     => 'nullable|boolean',
             'repeat_frequency' => 'nullable|string',
@@ -218,7 +218,10 @@ public function store(Request $request)
     if ($request->has('type'))        $task->type = $request->type;
     
     // التواريخ
-    if ($request->has('dueDate'))     $task->due_date = $request->dueDate;
+    if ($request->has('dueDate')) {
+        $request->validate(['dueDate' => 'required|date']);
+        $task->due_date = $request->dueDate;
+    }
     if ($request->has('dueTime'))     $task->due_time = $request->dueTime;
     
     // التذكير

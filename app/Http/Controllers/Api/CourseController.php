@@ -14,7 +14,7 @@ class CourseController extends Controller
     /**
      * جلب كل المواد الخاصة بالطالبة المسجلة حالياً مع بيانات الفصل الدراسي المرتبط
      */
-    public function index(Request $request) 
+    public function index(Request $request)
     {
         return $request->user()->courses()->with(['semester', 'resources'])->get();
     }
@@ -22,12 +22,12 @@ class CourseController extends Controller
     /**
      * إضافة مادة جديدة - تم تحديث الـ Validation لاستقبال الحقول الجديدة من الواجهة
      */
-    public function store(Request $request) 
+    public function store(Request $request)
     {
         $data = $request->validate([
             'title'          => 'required|string|max:255',
             'credits'        => 'required|integer|min:1',
-            'status'         => 'required|string|in:planned,current,completed', 
+            'status'         => 'required|string|in:planned,current,completed',
             'semester_id'    => 'nullable|exists:semesters,id',
             'code'           => 'nullable|string|max:50',
             'instructor'     => 'nullable|string|max:255',
@@ -140,7 +140,9 @@ class CourseController extends Controller
                         if (!empty($a['title'])) {
                             $weeklyPlan->assignments()->create([
                                 'title'    => $a['title'],
-                                'due_date' => $a['dueDate'] ?? null,
+                                'due_date' => !empty($a['dueDate'])
+                                    ? \Carbon\Carbon::parse($a['dueDate'])->format('Y-m-d')
+                                    : null,
                                 'status'   => $a['status'] ?? 'pending',
                             ]);
                         }
@@ -150,7 +152,7 @@ class CourseController extends Controller
         }
 
         // Only notify on actual metadata changes (not on weekly_plan/resources-only updates)
-        $metaFields = ['title','credits','status','code','instructor','duration_weeks','description','image_url','numeric_grade'];
+        $metaFields = ['title', 'credits', 'status', 'code', 'instructor', 'duration_weeks', 'description', 'image_url', 'numeric_grade'];
         $hasMetaChange = count(array_intersect_key($data, array_flip($metaFields))) > 0;
         if ($hasMetaChange) {
             Notification::create([
@@ -175,7 +177,7 @@ class CourseController extends Controller
     {
         $courseName = $course->title;
         $course->delete();
-        
+
         // إضافة إشعار عند الحذف
         Notification::create([
             'user_id' => auth()->id(),
@@ -200,7 +202,7 @@ class CourseController extends Controller
         // --- الجزء التلقائي: إنشاء الأسابيع إذا كانت ناقصة (للمواد القديمة) ---
         $weeksCount = $course->duration_weeks ?? 16;
         $existingWeeks = $course->weeklyPlans()->pluck('week_number')->toArray();
-        
+
         for ($i = 1; $i <= $weeksCount; $i++) {
             if (!in_array($i, $existingWeeks)) {
                 $course->weeklyPlans()->create([

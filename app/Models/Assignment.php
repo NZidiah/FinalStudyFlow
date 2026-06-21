@@ -8,6 +8,10 @@ class Assignment extends Model
 {
     protected $fillable = ['weekly_plan_id', 'title', 'due_date', 'status'];
 
+    protected $casts = [
+        'due_date' => 'date',
+    ];
+
     public function weeklyPlan()
     {
         return $this->belongsTo(WeeklyPlan::class);
