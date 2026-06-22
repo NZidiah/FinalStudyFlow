@@ -93,15 +93,32 @@ class CourseController extends Controller
 
         $course->update($data);
 
-        // Sync resources to the resources table
+
+        // Sync resources
+        // 1) Persist JSON array directly into `courses.resources` (what you see in phpMyAdmin)
+        // 2) Keep the polymorphic `resources` relationship in sync
         if (!\is_null($incomingResources) && \is_array($incomingResources)) {
+            // Ensure `courses.resources` column is populated
+            $course->resources = $incomingResources;
+            $course->save();
+
+            // Keep relation in sync (rows in `resources` table)
             $course->resources()->delete();
+
             foreach ($incomingResources as $r) {
-                if (!empty($r['title']) && !empty($r['url'])) {
+                $title = $r['title'] ?? null;
+                $url = $r['url']
+                    ?? $r['file_url']
+                    ?? $r['path']
+                    ?? $r['value']
+                    ?? $r['id']
+                    ?? null;
+
+                if (!empty($title) && !empty($url)) {
                     $course->resources()->create([
-                        'title'       => $r['title'],
+                        'title'       => $title,
                         'type'        => $r['type'] ?? 'link',
-                        'url'         => $r['url'],
+                        'url'         => (string) $url,
                         'description' => $r['description'] ?? null,
                     ]);
                 }

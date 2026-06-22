@@ -16,7 +16,9 @@ class FocusController extends Controller
         // 1. التحقق من صحة البيانات القادمة من الفرونت إند
         $request->validate([
             'minutes' => 'required|integer',
-            'type' => 'nullable|string'
+            'type'    => 'nullable|string',
+            'task_id' => 'nullable|exists:tasks,id',
+
         ]);
 
         try {
@@ -27,7 +29,7 @@ class FocusController extends Controller
 
             // 3. إنشاء السجل وربطه بالـ user_id الصحيح
             $session = FocusSession::create([
-                'user_id' => Auth::id(), 
+                'user_id' => Auth::id(),
                 'minutes' => $request->minutes,
                 'type' => $request->type ?? 'pomodoro',
                 'task_id' => $request->task_id, // سيأخذ القيمة سواء كانت موجودة أو null
@@ -46,11 +48,10 @@ class FocusController extends Controller
                 'message' => 'Focus session saved successfully!',
                 'session' => $session
             ], 201);
-
         } catch (\Exception $e) {
             // 4. في حال حدوث خطأ (مثلاً مشكلة في قاعدة البيانات)، سيظهر لكِ في ملف laravel.log
             Log::error('Focus Session Save Error: ' . $e->getMessage());
-            
+
             return response()->json([
                 'message' => 'Failed to save session',
                 'error' => $e->getMessage()

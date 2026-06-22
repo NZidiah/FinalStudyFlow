@@ -22,6 +22,7 @@ class Course extends Model
         'numeric_grade',
         'status',
         'weekly_plan',
+        'resources',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class Course extends Model
         'duration_weeks'=> 'integer',
         'numeric_grade' => 'float',
         'weekly_plan'   => 'array',
+        'resources'     => 'array',
     ];
 
     // العلاقة مع User

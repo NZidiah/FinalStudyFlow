@@ -9,12 +9,13 @@ class LearningPlan extends Model
     protected $fillable = [
         'user_id', 'title', 'goal', 'description', 
         'category', 'target_skill', 'start_date', 'end_date', 'status',
-        'stages', 'milestones'
+        'stages', 'milestones', 'resources'
     ];
 
     protected $casts = [
         'stages' => 'array',
         'milestones' => 'array',
+        'resources' => 'array',
     ];
 
     // علاقة مع المستخدم

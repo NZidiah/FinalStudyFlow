@@ -41,6 +41,7 @@ class LearningController extends Controller
             'status' => 'required|in:planned,active,completed,paused',
             'stages' => 'nullable|array',
             'milestones' => 'nullable|array',
+            'resources' => 'nullable|array',
         ]);
 
         $plan = LearningPlan::create(array_merge($validated, [
@@ -104,6 +105,7 @@ class LearningController extends Controller
             'status' => 'sometimes|required|in:planned,active,completed,paused',
             'stages' => 'nullable|array',
             'milestones' => 'nullable|array',
+            'resources' => 'nullable|array',
         ]);
 
         $plan->update($validated);
